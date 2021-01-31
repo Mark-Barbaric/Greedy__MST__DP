@@ -13,12 +13,12 @@ protected:
     std::ifstream inputStream;
 
 public:
-    FileParser(const std::string& file){
+    explicit FileParser(const std::string& file){
 
         inputStream.open(file);
     }
 
-    ~FileParser() {inputStream.close();}
+    virtual ~FileParser() {inputStream.close();}
 
     virtual void parseFile() = 0;
 };
@@ -48,7 +48,6 @@ public:
                 job.weight = std::stoi(segment);
                 std::getline(ss, segment, ' ');
                 job.length = std::stoi(segment);
-
                 jobs.push_back(job);
             }
         }
@@ -57,8 +56,12 @@ public:
     std::vector<Job> getJobs() const noexcept {return jobs;}
 };
 
+struct EdgeData {int node1 = 0, node2 = 0;
+    long weight = 0;};
+
 class EdgeFileParser : public FileParser{
-    std::vector<std::pair<int,int>> edges;
+    std::vector<EdgeData> edges;
+    int numNodes = 0;
 public:
 
     explicit EdgeFileParser(const std::string& file): FileParser(file){
@@ -71,26 +74,31 @@ public:
             std::string line;
             std::getline(inputStream, line);
 
-            int numNodes = std::stoi(line);
-            std::getline(inputStream, line);
-            int numEdges = std::stoi(line);
+            std::stringstream fs (line);
+            std::string seg1;
+            std::getline(fs, seg1, ' ');
+            numNodes = std::stoi(seg1) + 1;
+            std::getline(fs, seg1, ' ');
+            int numEdges = std::stoi(seg1);
 
             for (int i = 0; i < numEdges; ++i) {
                 std::getline(inputStream, line);
                 std::stringstream ss(line);
                 std::string segment;
-                Job job;
+                EdgeData edgeData;
                 std::getline(ss, segment, ' ');
-                job.weight = std::stoi(segment);
+                edgeData.node1 = std::stoi(segment);
                 std::getline(ss, segment, ' ');
-                job.length = std::stoi(segment);
-
-                jobs.push_back(job);
+                edgeData.node2 = std::stoi(segment);
+                std::getline(ss, segment, ' ');
+                edgeData.weight = std::stoi(segment);
+                edges.push_back(edgeData);
             }
         }
     }
 
-    std::vector<Job> getJobs() const noexcept {return jobs;}
+    std::vector<EdgeData> getEdges() const noexcept {return edges;}
+    int getNumNodes() const noexcept {return numNodes;}
 };
 
 #endif //GREEDY__MST__DP_FILEPARSER_H
